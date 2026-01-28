@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LogOut, Mail, Trophy, RefreshCw } from "lucide-react";
+import { LogOut, Mail, Trophy, RefreshCw, Trash2 } from "lucide-react";
 
 type Entry = {
     id: string;
@@ -83,6 +83,25 @@ export default function AdminPage() {
         setLoading(false);
     };
 
+    const deleteEntry = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this entry?")) return;
+
+        setLoading(true);
+        const res = await fetch("/api/admin/entries/delete", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id }),
+        });
+
+        if (res.ok) {
+            setEntries(entries.filter((e) => e.id !== id));
+        } else {
+            const data = await res.json();
+            alert(data.error || "Failed to delete entry");
+        }
+        setLoading(false);
+    };
+
     if (isAuthenticated === null) return null;
 
     if (!isAuthenticated) {
@@ -151,15 +170,25 @@ export default function AdminPage() {
                                     <td style={{ padding: "1rem" }}>{entry.email}</td>
                                     <td style={{ padding: "1rem", fontSize: "0.875rem" }}>{entry.source || "-"}</td>
                                     <td style={{ padding: "1rem" }}>
-                                        <button
-                                            onClick={() => selectWinner(entry.id)}
-                                            className="button"
-                                            style={{ padding: "0.4rem 0.8rem", width: "auto", fontSize: "0.875rem" }}
-                                            disabled={loading}
-                                        >
-                                            <Trophy size={14} style={{ marginRight: "0.4rem" }} />
-                                            Pick
-                                        </button>
+                                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                                            <button
+                                                onClick={() => selectWinner(entry.id)}
+                                                className="button"
+                                                style={{ padding: "0.4rem 0.8rem", width: "auto", fontSize: "0.875rem" }}
+                                                disabled={loading}
+                                            >
+                                                <Trophy size={14} style={{ marginRight: "0.4rem" }} />
+                                                Pick
+                                            </button>
+                                            <button
+                                                onClick={() => deleteEntry(entry.id)}
+                                                className="button button-outline"
+                                                style={{ padding: "0.4rem 0.8rem", width: "auto", fontSize: "0.875rem", color: "#ef4444", borderColor: "#ef4444" }}
+                                                disabled={loading}
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
